@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: telegram-bot
+    restart: always
+    depends_on:
+      - api
+      - db
+    networks:
+      - app-network
+
+  api:
+    depends_on:
+      - db
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    networks:
+      - app-network
+    container_name: api-service
+    ports:
+      - "8000:8000" # Пробрасываем порт для доступа к API
+    command: > 
+      sh -c "sleep 3 && alembic upgrade head && uvicorn main:api  --host 0.0.0.0 --port 8000 --reload"
+
+  db:
+    image: postgres:17
+    container_name: postgres-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=228669
+      - POSTGRES_DB=TaskBotDB
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
